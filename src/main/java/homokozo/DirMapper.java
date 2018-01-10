@@ -2,7 +2,6 @@ package homokozo;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 
 public class DirMapper {
 
@@ -30,11 +29,12 @@ public class DirMapper {
             if (currentSubDirs != null && currentSubDirs.length > 0) {
                 Map<String, Object> subDirMap;
                 for (File file : currentSubDirs) {
+                    String sanitizedName = file.getName();
                     if (file.isDirectory()) {
                         subDirMap = mapDirsWorker(file);
-                        dirMap.put(file.getName(), !subDirMap.isEmpty() ? subDirMap : null);
+                        dirMap.put(sanitizedName, !subDirMap.isEmpty() ? subDirMap : null);
                     } else if (file.isFile()) {
-                        dirMap.put(file.getName(), file.getName());
+                        dirMap.put(sanitizedName, sanitizedName);
                     }
                 }
             }
@@ -52,14 +52,18 @@ public class DirMapper {
         for (Map.Entry<String, Object> o : values) {
             Object value = o.getValue();
             if (value != null && !(value instanceof String)) {
-                children.add(new TreeNode(o.getKey(), treeifyChildren(((Map) value))));
+                children.add(new TreeNode(sanitize(o.getKey()), treeifyChildren(((Map) value))));
             } else if (value != null) {
-                children.add(new TreeNode(value.toString(), new ArrayList<>()));
+                children.add(new TreeNode(sanitize(value.toString()), new ArrayList<>()));
             } else {
-                children.add(new TreeNode(o.getKey(), new ArrayList<>()));
+                children.add(new TreeNode(sanitize(o.getKey()), new ArrayList<>()));
             }
         }
         return children;
+    }
+
+    private static String sanitize(String input) {
+        return input.replaceAll("[\\r\\n]", "");
     }
 
     // respectfully stolen from SO user VasyaNovikov
@@ -70,7 +74,7 @@ public class DirMapper {
         final List<TreeNode> children;
 
         TreeNode(String name, List<TreeNode> children) {
-            this.name = name.replaceAll("[\\r\\n]","");
+            this.name = sanitize(name);
             this.children = children;
         }
 
@@ -80,7 +84,7 @@ public class DirMapper {
 
         private void print(String prefix, boolean isTail) {
             System.out.println(prefix + (isTail ? "└── " : "├── ") + name);
-            for (int i = 0; i < children.size() - 1; i++) { // children.size produces NPE
+            for (int i = 0; i < children.size() - 1; i++) {
                 children.get(i).print(prefix + (isTail ? "    " : "│   "), false);
             }
             if (children.size() > 0) {
