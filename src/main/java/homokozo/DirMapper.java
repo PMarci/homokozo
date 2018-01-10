@@ -17,7 +17,7 @@ public class DirMapper {
         if (!startDir.isFile() && !startDir.isDirectory()) {
             throw new IllegalArgumentException(String.format("Can't open path %s, exiting...", path));
         } else if (startDir.isFile()) {
-            throw new IllegalArgumentException(String.format("Path %s is file, exiting....", path));
+            throw new IllegalArgumentException(String.format("Path %s is file, exiting...", path));
         }
         return mapDirsWorker(startDir);
     }
@@ -52,11 +52,11 @@ public class DirMapper {
         for (Map.Entry<String, Object> o : values) {
             Object value = o.getValue();
             if (value != null && !(value instanceof String)) {
-                children.add(new TreeNode(sanitize(o.getKey()), treeifyChildren(((Map) value))));
+                children.add(new TreeNode(o.getKey(), treeifyChildren(((Map) value))));
             } else if (value != null) {
-                children.add(new TreeNode(sanitize(value.toString()), new ArrayList<>()));
+                children.add(new TreeNode(value.toString(), new ArrayList<>()));
             } else {
-                children.add(new TreeNode(sanitize(o.getKey()), new ArrayList<>()));
+                children.add(new TreeNode(o.getKey(), new ArrayList<>()));
             }
         }
         return children;
