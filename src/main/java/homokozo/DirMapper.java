@@ -2,15 +2,18 @@ package homokozo;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class DirMapper {
 
     public static void main(String[] args) {
         Map<String, Object> map = mapDirs(args[0]);
         System.out.println(map);
+        TreeNode node = treeify(map, args[0]);
+        node.print();
     }
 
-    public static Map<String, Object> mapDirs(String path) {
+    private static Map<String, Object> mapDirs(String path) {
         File startDir = new File(path);
         if (!startDir.isFile() && !startDir.isDirectory()) {
             throw new IllegalArgumentException(String.format("Can't open path %s, exiting...", path));
@@ -25,17 +28,13 @@ public class DirMapper {
         if (currentDir.isDirectory() && currentDir.canRead()) {
             File[] currentSubDirs = currentDir.listFiles();
             if (currentSubDirs != null && currentSubDirs.length > 0) {
+                Map<String, Object> subDirMap;
                 for (File file : currentSubDirs) {
-                    Map<String, Object> subDirMap;
                     if (file.isDirectory()) {
                         subDirMap = mapDirsWorker(file);
-                        if (subDirMap.size() > 0) {
-                            dirMap.put(file.getName(), subDirMap);
-                        } else {
-                            dirMap.put(file.getName(), null);
-                        }
+                        dirMap.put(file.getName(), !subDirMap.isEmpty() ? subDirMap : null);
                     } else if (file.isFile()) {
-                        dirMap.put(file.getName(), new File(file.getName()));
+                        dirMap.put(file.getName(), file.getName());
                     }
                 }
             }
@@ -43,28 +42,50 @@ public class DirMapper {
         return dirMap;
     }
 
-    public class TreeNode {
+    private static TreeNode treeify(Map<String, Object> map, String rootDir) {
+        return new TreeNode(rootDir, treeifyChildren(map));
+    }
+
+    private static List<TreeNode> treeifyChildren(Map<String, Object> map) {
+        List<TreeNode> children = new ArrayList<>();
+        Set<Map.Entry<String, Object>> values = map.entrySet();
+        for (Map.Entry<String, Object> o : values) {
+            Object value = o.getValue();
+            if (value != null && !(value instanceof String)) {
+                children.add(new TreeNode(o.getKey(), treeifyChildren(((Map) value))));
+            } else if (value != null) {
+                children.add(new TreeNode(value.toString(), new ArrayList<>()));
+            } else {
+                children.add(new TreeNode(o.getKey(), new ArrayList<>()));
+            }
+        }
+        return children;
+    }
+
+    // respectfully stolen from SO user VasyaNovikov
+
+    static class TreeNode {
 
         final String name;
         final List<TreeNode> children;
 
-        public TreeNode(String name, List<TreeNode> children) {
-            this.name = name;
+        TreeNode(String name, List<TreeNode> children) {
+            this.name = name.replaceAll("[\\r\\n]","");
             this.children = children;
         }
 
-        public void print() {
+        void print() {
             print("", true);
         }
 
         private void print(String prefix, boolean isTail) {
             System.out.println(prefix + (isTail ? "└── " : "├── ") + name);
-            for (int i = 0; i < children.size() - 1; i++) {
+            for (int i = 0; i < children.size() - 1; i++) { // children.size produces NPE
                 children.get(i).print(prefix + (isTail ? "    " : "│   "), false);
             }
             if (children.size() > 0) {
                 children.get(children.size() - 1)
-                    .print(prefix + (isTail ? "    " : "│   "), true);
+                        .print(prefix + (isTail ? "    " : "│   "), true);
             }
         }
     }
