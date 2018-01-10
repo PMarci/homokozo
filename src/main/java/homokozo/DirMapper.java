@@ -60,9 +60,9 @@ public class DirMapper {
             if (value != null && !(value instanceof String)) {
                 children.add(new TreeNode(o.getKey(), treeifyChildren(((Map) value))));
             } else if (value != null) {
-                children.add(new TreeNode(value.toString(), new ArrayList<>()));
+                children.add(new TreeNode(value.toString(), Collections.emptyList()));
             } else {
-                children.add(new TreeNode(o.getKey(), new ArrayList<>()));
+                children.add(new TreeNode(o.getKey(), Collections.emptyList()));
             }
         }
         return children;
