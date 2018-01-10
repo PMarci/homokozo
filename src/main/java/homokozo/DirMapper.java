@@ -6,13 +6,19 @@ import java.util.*;
 public class DirMapper {
 
     public static void main(String[] args) {
-        Map<String, Object> map = mapDirs(args[0]);
+        Map<String, Object> map = null;
+        try {
+            map = mapDirs(args[0]);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
         System.out.println(map);
         TreeNode node = treeify(map, args[0]);
         node.print();
     }
 
-    private static Map<String, Object> mapDirs(String path) {
+    private static Map<String, Object> mapDirs(String path) throws IllegalArgumentException {
         File startDir = new File(path);
         if (!startDir.isFile() && !startDir.isDirectory()) {
             throw new IllegalArgumentException(String.format("Can't open path %s, exiting...", path));
