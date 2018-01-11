@@ -18,7 +18,7 @@ public class DirMapper {
         node.print();
     }
 
-    private static Map<String, Object> mapDirs(String path) throws IllegalArgumentException {
+    private static Map<String, Object> mapDirs(String path) {
         File startDir = new File(path);
         if (!startDir.isFile() && !startDir.isDirectory()) {
             throw new IllegalArgumentException(String.format("Can't open path %s, exiting...", path));
@@ -35,7 +35,7 @@ public class DirMapper {
             if (currentSubDirs != null && currentSubDirs.length > 0) {
                 Map<String, Object> subDirMap;
                 for (File file : currentSubDirs) {
-                    String sanitizedName = file.getName();
+                    String sanitizedName = sanitize(file.getName());
                     if (file.isDirectory()) {
                         subDirMap = mapDirsWorker(file);
                         dirMap.put(sanitizedName, !subDirMap.isEmpty() ? subDirMap : null);
